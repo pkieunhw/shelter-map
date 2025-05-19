@@ -1,70 +1,106 @@
-# Getting Started with Create React App
+# 🐶 Shelter Map
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+React로 만든 보호소 위치 지도 서비스입니다.
 
-## Available Scripts
+## ✨ 주요 기능
+- 보호소 이름 검색
+- 현재 위치 기준 거리순 정렬
+- 카카오맵에 마커 표시
+- 거리 연결선(Polyline) 표시
 
-In the project directory, you can run:
+## 🧪 실행 방법
 
-### `npm start`
+```bash
+npm install
+npm start
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+👩‍💻 기술 스택
+React (리액트)
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+JavaScript (자바스크립트)
 
-### `npm test`
+Kakao Map API
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## 🙏 감사합니다
 
-### `npm run build`
+이 프로젝트는 캡스톤디자인 과제로 제작되었습니다.
+# 🐶 Shelter Map
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+React로 만든 보호소 위치 지도 서비스입니다.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## ✨ 주요 기능
+- 보호소 이름 검색
+- 현재 위치 기준 거리순 정렬
+- 카카오맵에 마커 표시
+- 거리 연결선(Polyline) 표시
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## 🧪 실행 방법
 
-### `npm run eject`
+```bash
+npm install
+npm start
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+👩‍💻 기술 스택
+React (리액트)
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+JavaScript (자바스크립트)
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+Kakao Map API
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## 🙏 감사합니다
 
-## Learn More
+이 프로젝트는 캡스톤디자인 과제로 제작되었습니다.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+# 🐶 Shelter Map
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+React로 만든 보호소 위치 지도 서비스입니다.
 
-### Code Splitting
+## ✨ 주요 기능
+- 보호소 이름 검색
+- 현재 위치 기준 거리순 정렬
+- 카카오맵에 마커 표시
+- 거리 연결선(Polyline) 표시
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## 🧪 실행 방법
 
-### Analyzing the Bundle Size
+```bash
+npm install
+npm start
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+👩‍💻 기술 스택
+React (리액트)
 
-### Making a Progressive Web App
+JavaScript (자바스크립트)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+Kakao Map API
 
-### Advanced Configuration
+## 🙏 감사합니다
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+이 프로젝트는 캡스톤디자인 과제로 제작되었습니다.
+# 🐶 Shelter Map
 
-### Deployment
+React로 만든 보호소 위치 지도 서비스입니다.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+## ✨ 주요 기능
+- 보호소 이름 검색
+- 현재 위치 기준 거리순 정렬
+- 카카오맵에 마커 표시
+- 거리 연결선(Polyline) 표시
 
-### `npm run build` fails to minify
+## 🧪 실행 방법
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+```bash
+npm install
+npm start
+
+👩‍💻 기술 스택
+React (리액트)
+
+JavaScript (자바스크립트)
+
+Kakao Map API
+
+## 🙏 감사합니다
+
+이 프로젝트는 캡스톤디자인 과제로 제작되었습니다.
+
