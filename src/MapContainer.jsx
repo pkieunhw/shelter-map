@@ -1,219 +1,238 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "tailwindcss/tailwind.css";
-import "./App.css";
-
-function getDistance(lat1, lng1, lat2, lng2) {
-  const R = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLng = (lng2 - lng1) * Math.PI / 180;
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(lat1 * Math.PI / 180) *
-      Math.cos(lat2 * Math.PI / 180) *
-      Math.sin(dLng / 2) ** 2;
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
 
 function MapContainer() {
-  const [searchText, setSearchText] = useState("");
-  const [suggestions, setSuggestions] = useState([]);
-  const [mapInstance, setMapInstance] = useState(null);
   const [shelters, setShelters] = useState([]);
-  const [selectedShelter, setSelectedShelter] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
-  const [sortedShelters, setSortedShelters] = useState([]);
-  const [sortByDistance, setSortByDistance] = useState(false);
-  const [polylineInstance, setPolylineInstance] = useState(null);
+  const [mapRef, setMapRef] = useState(null);
+  const [infoWindowList, setInfoWindowList] = useState([]);
+  const [markerList, setMarkerList] = useState([]);
+  const [polyline, setPolyline] = useState(null);
+  const [infoWindow, setInfoWindow] = useState(null);
+  const [searchText, setSearchText] = useState("");
+  const [filtered, setFiltered] = useState([]);
+  const [closestName, setClosestName] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
     const script = document.createElement("script");
-    script.src = "https://dapi.kakao.com/v2/maps/sdk.js?appkey=b20318c59f42b7677cbf4c31b9f38420&autoload=false";
+    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=b20318c59f42b7677cbf4c31b9f38420&autoload=false`; // 본인 키로 교체
     script.async = true;
 
     script.onload = () => {
       window.kakao.maps.load(() => {
         const container = document.getElementById("map");
-        const options = {
+        const map = new window.kakao.maps.Map(container, {
           center: new window.kakao.maps.LatLng(37.5665, 126.9780),
           level: 10,
-        };
-        const map = new window.kakao.maps.Map(container, options);
-        setMapInstance(map);
-
-        fetch("/shelters.json")
-          .then((res) => res.json())
-          .then((shelterList) => {
-            setShelters(shelterList);
-            const markerImage = new window.kakao.maps.MarkerImage(
-              "/dog-icon.png",
-              new window.kakao.maps.Size(40, 40)
-            );
-
-            shelterList.forEach((shelter) => {
-              const marker = new window.kakao.maps.Marker({
-                map: map,
-                position: new window.kakao.maps.LatLng(shelter.lat, shelter.lng),
-                title: shelter.name,
-                image: markerImage,
-              });
-
-              window.kakao.maps.event.addListener(marker, "click", () => {
-                setSelectedShelter(shelter);
-                const shelterPos = new window.kakao.maps.LatLng(shelter.lat, shelter.lng);
-                map.setCenter(shelterPos);
-
-                if (userLocation) {
-                  if (polylineInstance) polylineInstance.setMap(null);
-                  const newPolyline = new window.kakao.maps.Polyline({
-                    path: [userLocation, shelterPos],
-                    strokeWeight: 4,
-                    strokeColor: "#FF0000",
-                    strokeOpacity: 0.8,
-                    strokeStyle: "solid",
-                  });
-                  newPolyline.setMap(map);
-                  setPolylineInstance(newPolyline);
-                }
-
-                navigate(`/shelter/${encodeURIComponent(shelter.name)}`);
-              });
-            });
-          });
+        });
+        setMapRef(map);
 
         if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition((position) => {
-            const userLat = position.coords.latitude;
-            const userLng = position.coords.longitude;
-            const userPos = new window.kakao.maps.LatLng(userLat, userLng);
+          navigator.geolocation.getCurrentPosition((pos) => {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            const userPos = new window.kakao.maps.LatLng(lat, lng);
             setUserLocation(userPos);
+            new window.kakao.maps.Marker({ map, position: userPos });
 
-            new window.kakao.maps.Marker({
-              map: map,
-              position: userPos,
-              title: "🧍‍♀️ 현재 위치",
-            });
+            fetch("/shelters.json")
+              .then((res) => res.json())
+              .then((data) => {
+                const withDistance = data.map((s) => ({
+                  ...s,
+                  distance: getDistance(lat, lng, s.lat, s.lng),
+                }));
+                withDistance.sort((a, b) => a.distance - b.distance);
+                setShelters(withDistance);
+                setFiltered(withDistance);
+                setClosestName(withDistance[0].name);
 
-            map.setCenter(userPos);
+                const infoList = [];
+                const markerList = [];
+
+                withDistance.forEach((shelter) => {
+                  const marker = new window.kakao.maps.Marker({
+                    position: new window.kakao.maps.LatLng(shelter.lat, shelter.lng),
+                    map,
+                    image: new window.kakao.maps.MarkerImage(
+                      shelter.name === withDistance[0].name
+                        ? "/dog-icon1.png"
+                        : "/dog-icon.png",
+                      new window.kakao.maps.Size(40, 40),
+                      { offset: new window.kakao.maps.Point(20, 40) }
+                    ),
+                  });
+
+                  const content = document.createElement("div");
+                  content.style.cssText =
+                    "display:flex;align-items:center;max-width:450px;position:relative;background:#fff;padding:12px 14px;border-radius:8px;box-shadow:0 3px 12px rgba(0,0,0,0.3);border:1px solid #ccc;";
+
+                  content.innerHTML = `
+                    <img src="${shelter.img || "/preview.jpg"}" style="width:85px;height:85px;margin-right:12px;object-fit:cover;border-radius:6px;border:1px solid #ccc;">
+                    <div style="font-size:15px;line-height:1.6;max-width:320px;">
+                      <strong>${shelter.name}</strong><br/>
+                      ${shelter.addr}<br/>
+                      ${shelter.tel}<br/>
+                    </div>
+                  `;
+
+                  const button = document.createElement("button");
+                  button.innerText = "상세보기";
+                  button.style.cssText = "margin-top:6px;padding:4px 10px;background:#eee;border-radius:4px;border:1px solid #aaa;cursor:pointer;";
+                  button.onclick = () => navigate(`/shelter-detail/${shelter.name}`);
+                  content.querySelector("div").appendChild(button);
+
+                  const link = document.createElement("a");
+                  link.href = `https://map.kakao.com/link/to/${encodeURIComponent(shelter.name)},${shelter.lat},${shelter.lng}`;
+                  link.target = "_blank";
+                  link.innerText = "길찾기";
+                  link.style.cssText =
+                    "margin-left:8px;padding:4px 10px;background:#3B82F6;color:white;border:none;border-radius:6px;font-weight:500;box-shadow:0 2px 6px rgba(0,0,0,0.1);cursor:pointer;";
+                  content.querySelector("div").appendChild(link);
+
+                
+
+                  const closeBtn = document.createElement("button");
+                  closeBtn.innerText = "❌";
+                  closeBtn.style.cssText =
+                    "position:absolute;top:6px;right:8px;background:transparent;border:none;font-size:16px;cursor:pointer;";
+                  content.appendChild(closeBtn);
+
+                  const iw = new window.kakao.maps.InfoWindow({ content });
+                  closeBtn.onclick = () => iw.close();
+
+                  window.kakao.maps.event.addListener(marker, "click", () => {
+                    infoList.forEach((inf) => inf.close());
+                    iw.open(map, marker);
+                    setInfoWindow(iw);
+                    map.setLevel(4);
+                    map.panTo(marker.getPosition());
+                  });
+
+                  infoList.push(iw);
+                  markerList.push(marker);
+                });
+
+                setInfoWindowList(infoList);
+                setMarkerList(markerList);
+              });
           });
         }
       });
     };
-
     document.head.appendChild(script);
   }, []);
 
-  const handleSearchChange = (e) => {
-    const value = e.target.value;
-    setSearchText(value);
-    if (value) {
-      const filtered = shelters.filter((s) => s.name.includes(value));
-      setSuggestions(filtered);
-    } else {
-      setSuggestions([]);
+  const getDistance = (lat1, lng1, lat2, lng2) => {
+    const R = 6371;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLng = ((lng2 - lng1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  const handleSearchClick = (shelter, idx) => {
+    const pos = new window.kakao.maps.LatLng(shelter.lat, shelter.lng);
+    mapRef.setLevel(4);
+    mapRef.panTo(pos);
+
+    if (infoWindow) infoWindow.close();
+    if (infoWindowList[idx]) {
+      infoWindowList.forEach((iw) => iw.close());
+      infoWindowList[idx].open(mapRef, markerList[idx]);
+      setInfoWindow(infoWindowList[idx]);
+    }
+
+    if (shelter.name === closestName && userLocation) {
+      const line = new window.kakao.maps.Polyline({
+        path: [userLocation, pos],
+        strokeWeight: 4,
+        strokeColor: "#f00",
+        strokeOpacity: 0.7,
+        strokeStyle: "solid",
+      });
+      line.setMap(mapRef);
+      setPolyline(line);
+    } else if (polyline) {
+      polyline.setMap(null);
     }
   };
 
-  const handleSuggestionClick = (shelter) => {
-    if (!mapInstance) return;
-    const pos = new window.kakao.maps.LatLng(shelter.lat, shelter.lng);
-    mapInstance.setCenter(pos);
-    setSelectedShelter(shelter);
-    setSearchText(shelter.name);
-    setSuggestions([]);
-  };
-
-  const toggleSort = () => {
-    if (!userLocation) return;
-    const sorted = [...shelters].map((s) => ({
-      ...s,
-      distance: getDistance(userLocation.getLat(), userLocation.getLng(), s.lat, s.lng),
-    })).sort((a, b) => a.distance - b.distance);
-    setSortedShelters(sorted);
-    setSortByDistance(!sortByDistance);
-  };
-
   return (
-    <div className="flex flex-col lg:flex-row w-full min-h-screen bg-white">
-      {/* 왼쪽 보호소 정보 */}
-      <div className="lg:w-1/4 w-full bg-gray-100 p-6 border-r">
-        <h3 className="text-xl font-semibold mb-4">📍 보호소 정보</h3>
-        {selectedShelter ? (
-          <div className="space-y-3">
-            <div className="text-lg font-bold">{selectedShelter.name}</div>
-            <div>☎ {selectedShelter.tel}</div>
-            <div>🏠 {selectedShelter.addr}</div>
-            <a
-              href={`https://www.google.com/maps/dir/?api=1&destination=${selectedShelter.lat},${selectedShelter.lng}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
+    <div style={{ position: "relative", height: "100vh" }}>
+      <div id="map" style={{ width: "100%", height: "100%" }}></div>
+
+      <div
+        style={{
+          position: "absolute",
+          top: "70px",
+          left: "30px",
+          width: "400px",
+          height: "70vh",
+          overflowY: "scroll",
+          overflowX: "auto",
+          background: "#fff",
+          borderRadius: "8px",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+          padding: "12px",
+          zIndex: 9999,
+        }}
+      >
+        <h2 style={{ fontSize: "18px", marginBottom: "10px" }}>📍 보호소 리스트</h2>
+        <input
+          value={searchText}
+          onChange={(e) => {
+            const value = e.target.value;
+            setSearchText(value);
+            setFiltered(value ? shelters.filter((s) => s.name.includes(value)) : shelters);
+          }}
+          placeholder="보호소 이름 검색"
+          style={{
+            padding: "6px 10px",
+            border: "1px solid #ccc",
+            borderRadius: "4px",
+            width: "100%",
+          }}
+        />
+        <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+          {filtered.map((shelter, idx) => (
+            <li
+              key={shelter.name}
+              onClick={() => handleSearchClick(shelter, idx)}
+              style={{
+                padding: "10px",
+                borderBottom: "1px solid #ddd",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+              }}
             >
-              교통 보기 🚗
-            </a>
-          </div>
-        ) : (
-          <p className="text-sm text-gray-500">마커를 클릭하면 정보가 표시됩니다.</p>
-        )}
-      </div>
-
-      {/* 오른쪽 지도 + 검색 + 거리순 리스트 */}
-      <div className="lg:w-3/4 w-full flex flex-col p-6">
-        {/* 검색창 */}
-        <div className="mb-4">
-          <input
-            type="text"
-            value={searchText}
-            onChange={handleSearchChange}
-            placeholder="🔍 보호소 이름 검색"
-            className="w-full max-w-lg px-4 py-2 border rounded shadow-sm"
-          />
-          {suggestions.length > 0 ? (
-            <ul className="bg-white border rounded mt-2 shadow max-w-lg">
-              {suggestions.map((shelter) => (
-                <li
-                  key={shelter.name}
-                  onClick={() => handleSuggestionClick(shelter)}
-                  className="px-4 py-2 cursor-pointer hover:bg-gray-100"
-                >
-                  {shelter.name}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            searchText && <p className="text-sm text-gray-500 mt-2">검색 결과 없음</p>
-          )}
-        </div>
-
-        {/* 지도 */}
-        <div id="map" className="w-full h-[400px] rounded shadow" />
-
-        {/* 거리순 보호소 리스트 */}
-        <div className="mt-6">
-          <h3 className="text-lg font-semibold mb-2">📏 거리순 보호소</h3>
-          <button
-            onClick={toggleSort}
-            className="mb-4 px-4 py-1 bg-green-600 text-white rounded hover:bg-green-700"
-          >
-            거리순으로 바꾸기
-          </button>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {(sortByDistance ? sortedShelters : shelters).map((shelter) => (
-              <div
-                key={shelter.name}
-                onClick={() => handleSuggestionClick(shelter)}
-                className="cursor-pointer p-4 bg-white border rounded shadow-sm hover:bg-gray-50"
-              >
+              <img
+                src={shelter.img || "/preview.jpg"}
+                alt={shelter.name}
+                style={{
+                  width: "60px",
+                  height: "60px",
+                  objectFit: "cover",
+                  marginRight: "10px",
+                  borderRadius: "4px",
+                }}
+              />
+              <div>
                 <strong>{shelter.name}</strong>
-                {sortByDistance && shelter.distance !== undefined && (
-                  <div className="text-sm text-gray-600 mt-1">🚶‍♀️ {shelter.distance.toFixed(2)} km</div>
+                <div style={{ fontSize: "13px", color: "#555" }}>{shelter.addr}</div>
+                <div style={{ fontSize: "13px", color: "#777" }}>{shelter.tel}</div>
+                {shelter.distance && (
+                  <div style={{ fontSize: "12px", color: "#999" }}>{shelter.distance.toFixed(1)} km</div>
                 )}
               </div>
-            ))}
-          </div>
-        </div>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
   );

@@ -4,6 +4,11 @@
   background-color: #f9f9f9;
   min-height: 100vh;
   padding: 2rem;
+
+  /* ✅ 여기에 아래 3줄만 추가해 주세요 */
+  height: 100%;
+  position: relative;
+  overflow: hidden;
 }
 
 /* 제목 스타일 */
