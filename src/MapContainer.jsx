@@ -1,3 +1,4 @@
+// ✅ 최종 완성 버전 MapContainer.jsx (카카오맵 + 이미지 + 하이라이트 + 자동 선 표시)
 import { useEffect, useState } from "react";
 
 function getDistance(lat1, lng1, lat2, lng2) {
@@ -22,6 +23,7 @@ function MapContainer() {
   const [searchText, setSearchText] = useState("");
   const [filtered, setFiltered] = useState([]);
   const [closestName, setClosestName] = useState("");
+  const [selectedShelter, setSelectedShelter] = useState("");
   const markerMap = {};
   const infoMap = {};
 
@@ -80,6 +82,7 @@ function MapContainer() {
                   <strong>${shelter.name}</strong><br/>
                   ${shelter.addr}<br/>
                   ${shelter.tel}<br/>
+                  <img src="${shelter.img}" width="100" style="margin-top:8px;" /><br/>
                   <a href="https://map.kakao.com/link/to/${encodeURIComponent(
                     shelter.name
                   )},${shelter.lat},${shelter.lng}" target="_blank" style="color:blue;">📍 길찾기</a>
@@ -93,6 +96,7 @@ function MapContainer() {
 
                   iw.open(map, marker);
                   setInfoWindow(iw);
+                  setSelectedShelter(shelter.name);
 
                   if (shelter.name === closestName && userLocation) {
                     const line = new window.kakao.maps.Polyline({
@@ -109,6 +113,26 @@ function MapContainer() {
                   map.panTo(marker.getPosition());
                 });
               });
+
+              // 자동으로 가장 가까운 보호소에 선 그리기
+              const closest = withDistance[0];
+              const marker = markerMap[closest.name];
+              const iw = infoMap[closest.name];
+              if (marker && iw) {
+                iw.open(map, marker);
+                setInfoWindow(iw);
+                map.panTo(marker.getPosition());
+
+                const line = new window.kakao.maps.Polyline({
+                  path: [userPos, marker.getPosition()],
+                  strokeWeight: 4,
+                  strokeColor: "#f00",
+                  strokeOpacity: 0.7,
+                  strokeStyle: "solid",
+                });
+                line.setMap(map);
+                setPolyline(line);
+              }
             });
         });
       });
@@ -136,6 +160,7 @@ function MapContainer() {
     mapRef.panTo(pos);
     iw.open(mapRef, marker);
     setInfoWindow(iw);
+    setSelectedShelter(shelter.name);
 
     if (shelter.name === closestName && userLocation) {
       const line = new window.kakao.maps.Polyline({
@@ -152,7 +177,6 @@ function MapContainer() {
 
   return (
     <div style={{ display: "flex", height: "100vh", width: "100vw" }}>
-      {/* 왼쪽 검색창 + 리스트 */}
       <div
         style={{
           width: "400px",
@@ -187,7 +211,8 @@ function MapContainer() {
                 border: "1px solid #ddd",
                 borderRadius: "6px",
                 cursor: "pointer",
-                background: "#f9f9f9",
+                background:
+                  selectedShelter === shelter.name ? "#ffe4b5" : "#f9f9f9",
               }}
             >
               <strong>{shelter.name}</strong>
@@ -203,7 +228,6 @@ function MapContainer() {
         </ul>
       </div>
 
-      {/* 오른쪽 지도 */}
       <div style={{ flexGrow: 1, position: "relative" }}>
         <div id="map" style={{ width: "100%", height: "100%" }}></div>
       </div>
