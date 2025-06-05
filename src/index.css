@@ -1,26 +1,12 @@
-/* 전체 페이지 여백 제거 */
-body {
-  margin: 0;
-  padding: 0;
-  font-family: "Noto Sans KR", sans-serif;
-}
-
-/* React 앱의 최상위 div */
-#root {
-  width: 100vw;
-  height: 100vh;
-}
-
-/* 카카오 지도를 그리는 div */
-#map {
-  width: 100%;
-  height: 500px; /* ✅ 고정 높이로 수정 */
-}
-
-/* ✅✅✅ 여기에 아래를 꼭 추가하세요!!! */
 html, body, #root {
+  width: 100%;
   height: 100%;
   margin: 0;
   padding: 0;
   overflow: hidden;
+}
+
+#map {
+  width: 100%;
+  height: 100% !important; /* 💡 핵심 */
 }
