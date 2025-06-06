@@ -1,6 +1,4 @@
-// 🔍 검색창에 돋보기 아이콘 추가 + 검색창 폭 고정 + 정렬/지역/내위치 버튼 유지
-import React, { useState, useEffect } from "react";
-
+import React, { useState, useEffect, useRef } from "react";
 
 function getDistance(lat1, lng1, lat2, lng2) {
   const R = 6371;
@@ -16,8 +14,8 @@ function getDistance(lat1, lng1, lat2, lng2) {
 
 function MapContainer() {
   const [shelters, setShelters] = useState([]);
-  const [userLocation, setUserLocation] = useState(null); // 내 위치 상태
-  const [userOverlay, setUserOverlay] = useState(null);   // 반짝이 오버레이 상태
+  const [userLocation, setUserLocation] = useState(null);
+  const [userOverlay, setUserOverlay] = useState(null);
   const [mapRef, setMapRef] = useState(null);
   const [polyline, setPolyline] = useState(null);
   const [infoWindow, setInfoWindow] = useState(null);
@@ -32,6 +30,7 @@ function MapContainer() {
   const itemsPerPage = 7;
   const markerMap = {};
   const infoMap = {};
+  const infoWindowRef = useRef(null);
 
   useEffect(() => {
     const script = document.createElement("script");
@@ -53,17 +52,15 @@ function MapContainer() {
           setUserLocation(userPos);
           new window.kakao.maps.Marker({ map, position: userPos });
 
-              // 🔽 여기 ↓ 추가
-              const pulse = document.createElement("div");
-              pulse.className = "pulse-marker";
-              const overlay = new kakao.maps.CustomOverlay({
-                content: pulse,
-                position: userPos,
-                xAnchor: 0.5,
-                yAnchor: 0.5,
-              });
-              overlay.setMap(map);
-            
+          const pulse = document.createElement("div");
+          pulse.className = "pulse-marker";
+          const overlay = new kakao.maps.CustomOverlay({
+            content: pulse,
+            position: userPos,
+            xAnchor: 0.5,
+            yAnchor: 0.5,
+          });
+          overlay.setMap(map);
 
           fetch("/shelters.json")
             .then((res) => res.json())
@@ -75,6 +72,10 @@ function MapContainer() {
               setShelters(withDistance);
               setFiltered(withDistance);
               setClosestName(withDistance[0]?.name || "");
+
+              if (!infoWindowRef.current) {
+                infoWindowRef.current = new window.kakao.maps.InfoWindow();
+              }
 
               withDistance.forEach((shelter) => {
                 const marker = new window.kakao.maps.Marker({
@@ -88,24 +89,56 @@ function MapContainer() {
                 });
                 markerMap[shelter.name] = marker;
 
-                const iw = new window.kakao.maps.InfoWindow();
-                const content = document.createElement("div");
-                content.style.cssText = "padding:10px;font-size:14px;max-width:300px;line-height:1.6;";
-                content.innerHTML = `
-                  <strong>${shelter.name}</strong><br/>
-                  ${shelter.addr}<br/>
-                  ${shelter.tel}<br/>
-                  <img src="${shelter.img}" width="100" style="margin-top:8px;" /><br/>
-                  <a href="https://map.kakao.com/link/to/${encodeURIComponent(shelter.name)},${shelter.lat},${shelter.lng}" target="_blank" style="color:blue;">📍 길찾기</a>`;
-                iw.setContent(content);
-                infoMap[shelter.name] = iw;
+               const content = document.createElement("div");
+                  content.style.cssText = `
+                    padding: 14px;
+                    font-size: 14px;
+                    width: 320px;
+                    line-height: 1.6;
+                    font-family: 'Noto Sans KR', sans-serif;
+                    border-radius: 12px;
+                    background: white;
+                  `;
+
+                  content.innerHTML = `
+                    <div style="display: flex; gap: 12px; align-items: flex-start;">
+                      <img src="${shelter.img}" 
+                          width="100" height="100"
+                          style="object-fit: cover; border-radius: 8px;" />
+                      <div style="flex: 1;">
+                        <div style="font-size: 16px; font-weight: bold; margin-bottom: 4px;">
+                          ${shelter.name}
+                        </div>
+                        <div style="margin-bottom: 2px;">📍 ${shelter.addr}</div>
+                        <div>📞 ${shelter.tel}</div>
+                      </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                      <a href="https://map.kakao.com/link/to/${encodeURIComponent(shelter.name)},${shelter.lat},${shelter.lng}" 
+                        target="_blank"
+                        style="font-size: 13px; color: #007BFF; text-decoration: underline;">
+                        🧭 길찾기
+                      </a>
+
+                      <a href="/shelter-detail/${encodeURIComponent(shelter.name)}" 
+                        style="background: #F97316; color: white; padding: 6px 12px; border-radius: 6px; font-weight: bold; text-decoration: none;">
+                        상세페이지 보기
+                      </a>
+                    </div>
+                  `;
+
+
+
+                infoMap[shelter.name] = content;
 
                 window.kakao.maps.event.addListener(marker, "click", () => {
-                  if (infoWindow) infoWindow.close();
+                  if (infoWindowRef.current) infoWindowRef.current.close();
                   if (polyline) polyline.setMap(null);
 
-                  iw.open(map, marker);
-                  setInfoWindow(iw);
+                  infoWindowRef.current.setContent(content);
+                  infoWindowRef.current.open(map, marker);
+                  setInfoWindow(infoWindowRef.current);
                   setSelectedShelter(shelter.name);
 
                   if (shelter.name === closestName && userLocation) {
@@ -155,57 +188,49 @@ function MapContainer() {
   const handleSearchClick = (shelter) => {
     const pos = new window.kakao.maps.LatLng(shelter.lat, shelter.lng);
     const marker = markerMap[shelter.name];
-    const iw = infoMap[shelter.name];
-    if (!marker || !iw || !mapRef) return;
-    if (infoWindow) infoWindow.close();
+    const content = infoMap[shelter.name];
+    if (!marker || !content || !mapRef) return;
+    if (infoWindowRef.current) infoWindowRef.current.close();
     if (polyline) polyline.setMap(null);
-    mapRef.setLevel(4);
-    mapRef.panTo(pos);
-    iw.open(mapRef, marker);
-    setInfoWindow(iw);
+    infoWindowRef.current.setContent(content);
+    infoWindowRef.current.open(mapRef, marker);
+    setInfoWindow(infoWindowRef.current);
     setSelectedShelter(shelter.name);
     setShowSuggestions(false);
   };
 
   const paginatedList = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-            const controlStyle = {
-                flex: 1,
-                backgroundColor: "#fff",   // 배경색 흰색
-                border: "1px solid #ccc",  // 회색 테두리
-                borderRadius: "6px",       // 모서리 둥글게
-                padding: "6px",            // 안쪽 여백
-                fontSize: "14px",          // 글자 크기
-                appearance: ""         // 💡 select 기본 화살표 제거 (브라우저 차이 대응)
-              };
 
+  const controlStyle = {
+    flex: 1,
+    backgroundColor: "#fff",
+    border: "1px solid #ccc",
+    borderRadius: "6px",
+    padding: "6px",
+    fontSize: "14px",
+    appearance: ""
+  };
 
   return (
     <div style={{ display: "flex", height: "100vh", width: "100vw" }}>
       <div style={{ width: "400px", padding: "20px", background: "#fff" }}>
         <h2 style={{ fontSize: "20px", marginBottom: "10px" }}>📍 보호소 검색</h2>
-
-               {/* 🔽 필터 바 복원 */}
-               <div style={{ display: "flex", gap: "6px", marginBottom: "10px" }}>
-                <select onChange={(e) => setSortOption(e.target.value)} value={sortOption} style={controlStyle}>
-                  <option value="거리순">거리순</option>
-                  <option value="등록순">등록순</option>
-                  <option value="이름순">이름순</option>
-                  <option value="업데이트순">업데이트순</option>
-                </select>
-
-                <select onChange={(e) => setRegionOption(e.target.value)} value={regionOption} style={controlStyle}>
-                  <option value="전체">전체</option>
-                  <option value="서울/인천">서울/인천</option>
-                  <option value="경기">경기</option>
-                  <option value="충청/강원">충청/강원</option>
-                  <option value="부산/경남/전라">부산/경남/전라</option>
-                </select>
-
-                <button style={controlStyle}>내 위치</button>
-              </div>
-
-
-        {/* 검색창 + 돋보기 */}
+        <div style={{ display: "flex", gap: "6px", marginBottom: "10px" }}>
+          <select onChange={(e) => setSortOption(e.target.value)} value={sortOption} style={controlStyle}>
+            <option value="거리순">거리순</option>
+            <option value="등록순">등록순</option>
+            <option value="이름순">이름순</option>
+            <option value="업데이트순">업데이트순</option>
+          </select>
+          <select onChange={(e) => setRegionOption(e.target.value)} value={regionOption} style={controlStyle}>
+            <option value="전체">전체</option>
+            <option value="서울/인천">서울/인천</option>
+            <option value="경기">경기</option>
+            <option value="충청/강원">충청/강원</option>
+            <option value="부산/경남/전라">부산/경남/전라</option>
+          </select>
+          <button style={controlStyle}>내 위치</button>
+        </div>
         <div style={{ position: "relative", width: "97%", marginBottom: "10px" }}>
           <input
             value={searchText}
@@ -218,14 +243,26 @@ function MapContainer() {
             style={{ position: "absolute", right: "20px", top: "50%", transform: "translateY(-50%)", cursor: "pointer", fontSize: "16px" }}
           >🔍</span>
         </div>
-
         <ul style={{ listStyle: "none", padding: 0 }}>
           {paginatedList.map((shelter) => (
-            <li key={shelter.name} onClick={() => handleSearchClick(shelter)} style={{ padding: "10px", marginBottom: "10px", border: "1px solid #ddd", borderRadius: "6px", cursor: "pointer", background: selectedShelter === shelter.name ? "#ffe4b5" : "#f9f9f9" }}>
+            <li
+              key={shelter.name}
+              onClick={() => handleSearchClick(shelter)}
+              style={{
+                padding: "10px",
+                marginBottom: "10px",
+                border: "1px solid #ddd",
+                borderRadius: "6px",
+                cursor: "pointer",
+                background: selectedShelter === shelter.name ? "#ffe4b5" : "#f9f9f9"
+              }}
+            >
               <strong>{shelter.name}</strong>
               <div style={{ fontSize: "13px", color: "#555" }}>{shelter.addr}</div>
               <div style={{ fontSize: "12px", color: "#777" }}>{shelter.tel}</div>
-              {shelter.distance && (<div style={{ fontSize: "11px", color: "#999" }}>거리: {shelter.distance.toFixed(1)} km</div>)}
+              {shelter.distance && (
+                <div style={{ fontSize: "11px", color: "#999" }}>거리: {shelter.distance.toFixed(1)} km</div>
+              )}
             </li>
           ))}
         </ul>
