@@ -11,7 +11,7 @@ function App() {
          <h2>🐕 우리 동네 보호소 찾기</h2>
         <Routes>
           <Route path="/" element={<MapContainer />} />
-         <Route path="/shelter-detail/:name" element={<ShelterDetail />} />
+         <Route path="/shelter-detail/:id" element={<ShelterDetail />} />
         
 
 
