@@ -117,7 +117,7 @@ function MapContainer() {
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
                       <a href="https://map.kakao.com/link/to/${encodeURIComponent(shelter.name)},${shelter.lat},${shelter.lng}" 
                         target="_blank"
-                        style="font-size: 13px; color: #007BFF; text-decoration: underline;">
+                        style="font-size: 15px; font-weight: bold; color:rgb(0, 140, 255); text-decoration: underline;">
                         🧭 길찾기
                       </a>
 
@@ -213,7 +213,17 @@ function MapContainer() {
 
   return (
     <div style={{ display: "flex", height: "100vh", width: "100vw" }}>
-      <div style={{ width: "400px", padding: "20px", background: "#fff" }}>
+    <div style={{ 
+            width: "400px", 
+            padding: "20px", 
+            background: "#fff", 
+            height: "100vh",             // 전체 높이 고정
+            overflowY: "auto",      // 세로 스크롤만
+            overflowX: "hidden"     // 가로 스크롤 막기
+
+            
+          }}>
+
         <h2 style={{ fontSize: "20px", marginBottom: "10px" }}>📍 보호소 검색</h2>
         <div style={{ display: "flex", gap: "6px", marginBottom: "10px" }}>
           <select onChange={(e) => setSortOption(e.target.value)} value={sortOption} style={controlStyle}>
@@ -243,29 +253,60 @@ function MapContainer() {
             style={{ position: "absolute", right: "20px", top: "50%", transform: "translateY(-50%)", cursor: "pointer", fontSize: "16px" }}
           >🔍</span>
         </div>
-        <ul style={{ listStyle: "none", padding: 0 }}>
-          {paginatedList.map((shelter) => (
-            <li
-              key={shelter.name}
-              onClick={() => handleSearchClick(shelter)}
-              style={{
-                padding: "10px",
-                marginBottom: "10px",
-                border: "1px solid #ddd",
-                borderRadius: "6px",
-                cursor: "pointer",
-                background: selectedShelter === shelter.name ? "#ffe4b5" : "#f9f9f9"
-              }}
-            >
-              <strong>{shelter.name}</strong>
-              <div style={{ fontSize: "13px", color: "#555" }}>{shelter.addr}</div>
-              <div style={{ fontSize: "12px", color: "#777" }}>{shelter.tel}</div>
-              {shelter.distance && (
-                <div style={{ fontSize: "11px", color: "#999" }}>거리: {shelter.distance.toFixed(1)} km</div>
-              )}
-            </li>
-          ))}
-        </ul>
+                    <ul style={{ listStyle: "none", padding: 0 }}>
+              {paginatedList.map((shelter, index) => (
+                <li
+                  key={shelter.name + index}
+                  onClick={() => handleSearchClick(shelter)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    padding: "10px",
+                    marginBottom: "10px",
+                    border: "1px solid #ddd",
+                    borderRadius: "6px",
+                    cursor: "pointer",
+                    background: selectedShelter === shelter.name ? "#ffe4b5" : "#f9f9f9",
+                  }}
+                >
+                  <img
+                    src={shelter.img}
+                    width="60"
+                    style={{ borderRadius: "8px", marginRight: "10px", objectFit: "cover" }}
+                  />
+                  <div>
+                    <div style={{ fontWeight: "bold", fontSize: "15px" }}>{shelter.name}</div>
+                    <div style={{ fontSize: "13px", color: "#555" }}>{shelter.addr}</div>
+                    <div style={{ fontSize: "12px", color: "#777" }}>{shelter.tel}</div>
+                    {shelter.distance && (
+                      <div style={{ fontSize: "13px", color: "red" }}>
+                        {shelter.distance.toFixed(1)} km
+                      </div>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+
+      <div style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: "10px",
+            marginTop: "10px"
+          }}>
+            <button onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))} disabled={currentPage === 1}>
+              ◀ 이전
+            </button>
+            <span style={{ fontWeight: "bold" }}>
+              {currentPage} / {Math.ceil(filtered.length / itemsPerPage)}
+            </span>
+            <button onClick={() => setCurrentPage((prev) => Math.min(Math.ceil(filtered.length / itemsPerPage), prev + 1))} disabled={currentPage === Math.ceil(filtered.length / itemsPerPage)}>
+              다음 ▶
+            </button>
+          </div>
+
       </div>
       <div style={{ flexGrow: 1, position: "relative" }}>
         <div id="map" style={{ width: "100%", height: "100%" }}></div>
