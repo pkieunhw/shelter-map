@@ -1,6 +1,8 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import MapContainer from "./MapContainer";
 import ShelterDetail from "./ShelterDetail";
+import "./index.css";  // ✅ 이 줄이 반드시 있어야 해요
+
 
 function App() {
   return (
@@ -19,4 +21,6 @@ function App() {
   );
 }
 
+
 export default App;
+
