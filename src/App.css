@@ -1,0 +1,19 @@
+/* 전체 앱에 기본 폰트와 배경색 */
+.App {
+  text-align: center;
+  background-color: #f9f9f9;
+  min-height: 100vh;
+  padding: 2rem;
+
+  /* ✅ 여기에 아래 3줄만 추가해 주세요 */
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 제목 스타일 */
+.App h2 {
+  font-size: 1.8rem;
+  color: #222;
+  margin-bottom: 1rem;
+}

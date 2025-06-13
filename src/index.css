@@ -1,0 +1,126 @@
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+#map {
+  width: 100%;
+  height: 700px !important;   /* ✅ 여기 핵심 */
+  margin-top: 20px;
+  border: 3px solid #ccc;
+  border-radius: 12px;
+  background-color: #e8f4ff;
+}
+
+
+.pulse-marker {
+  width: 20px;
+  height: 20px;
+  background: rgba(0, 153, 255, 0.4);
+  border: 2px solid #0099ff;
+  border-radius: 50%;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(0.9);
+    opacity: 0.9;
+  }
+}
+
+/* 📌 왼쪽 리스트 영역 스크롤 */
+.sidebar {
+  width: 400px;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: #fff;
+  padding: 20px;
+  box-sizing: border-box;
+  border-right: 1px solid #eee;
+}
+
+/* 📌 고정된 상단 필터 영역 */
+.fixed-filter {
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 10;
+  padding-bottom: 10px;
+  box-shadow: 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+}
+
+/* 📌 페이지네이션 스타일 */
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+  gap: 8px;
+}
+
+.pagination button {
+  padding: 6px 10px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background: #fff;
+  cursor: pointer;
+}
+
+.pagination button.active {
+  background: #f97316;
+  color: rgb(50, 192, 224);
+  font-weight: bold;
+}
+
+
+.pagination button:hover {
+  background-color: #f97316;   /* 주황색으로 */
+  color: rgb(7, 127, 255);
+  border-color: #f97316;
+  transition: all 0.3s ease;   /* 부드러운 전환 효과 */
+}
+
+.pagination button {
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.detail-button {
+  display: inline-block;
+  padding: 6px 12px;
+  background: rgb(7, 127, 255);        /* 배경 흰색으로 */
+  color: rgb(245, 246, 247);         /* 글자색 주황 */
+  border: 1px solid #169ef9; /* 테두리 주황 */
+  border-radius: 6px;
+  text-decoration: none;
+ 
+  transition: all 0.3s ease; /* 부드러운 전환 */
+}
+
+.detail-button:hover {
+ 
+   background: #F97316;
+  color: rgb(245, 246, 247);
+  font-weight: bold;
+  border: 1px solid #F97316;
+  border-radius: 6px;
+  text-decoration: none;
+}
+
+
+
+
+
+
