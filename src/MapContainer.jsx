@@ -88,7 +88,7 @@ function MapContainer() {
                   position: new window.kakao.maps.LatLng(shelter.lat, shelter.lng),
                   image: new window.kakao.maps.MarkerImage(
                     shelter.name === withDistance[0].name ? "/dog-icon1.png" : "/dog-icon.png",
-                    new window.kakao.maps.Size(40, 40),
+                    new window.kakao.maps.Size(50, 50),
                     { offset: new window.kakao.maps.Point(20, 40) }
                   ),
                 });
