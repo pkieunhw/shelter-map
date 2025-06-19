@@ -1,9 +1,12 @@
-import React, { useState, useRef } from "react";
+
+
+import React, { useState, useRef, useEffect } from "react";
 import SearchList from "./SearchList";
 import SearchFilter from "./SearchFilter";
 import { useShelterMap } from "../hooks/useShelterMap";
 
 function MapContainer() {
+  // ======== 레퍼런스(참조 객체)
   const mapRef = useRef(null);
   const markerMap = useRef(new Map());
   const infoMap = useRef(new Map());
@@ -11,14 +14,15 @@ function MapContainer() {
   const userLocation = useRef(null);
   const polylineRef = useRef(null);
 
+  // ======== 상태(state) 관리
   const [shelters, setShelters] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [closestName, setClosestName] = useState("");
   const [infoWindow, setInfoWindow] = useState(null);
-  const [selectedShelter, setSelectedShelter] = useState(null); // 항상 객체!
+  const [selectedShelter, setSelectedShelter] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortOption, setSortOption] = useState("거리순");
   const [regionOption, setRegionOption] = useState("전체");
+  const [sortOption, setSortOption] = useState("거리순");
   const [searchText, setSearchText] = useState("");
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -26,16 +30,13 @@ function MapContainer() {
 
   const itemsPerPage = 7;
 
-  // 마커 클릭/리스트 클릭 동기화(완전 핵심!)
+  // ======== 마커/리스트 클릭 동기화
   const handleSearchClick = (shelter) => {
     if (!shelter) return;
-    // 페이지 자동 이동: 해당 shelter가 몇 번째인지
     const idx = filtered.findIndex(item => item.id === shelter.id);
     if (idx !== -1) {
-      const newPage = Math.floor(idx / itemsPerPage) + 1;
-      setCurrentPage(newPage);
+      setCurrentPage(Math.floor(idx / itemsPerPage) + 1);
     }
-    // 지도 마커, 말풍선, 라인
     const marker = markerMap.current.get(shelter.name);
     const content = infoMap.current.get(shelter.name);
     if (!marker || !content || !mapRef.current) return;
@@ -47,16 +48,13 @@ function MapContainer() {
     setInfoWindow(infoWindowRef.current);
     setSelectedShelter(shelter);
 
-    // 기존 타이머 있으면 해제
     if (autoCloseTimer.current) clearTimeout(autoCloseTimer.current);
-
     autoCloseTimer.current = setTimeout(() => {
       setSelectedShelter(null);
       if (infoWindowRef.current) infoWindowRef.current.close();
     }, 5000);
   };
 
-  // 커스텀 훅(마커 클릭 이벤트까지 전달!)
   useShelterMap({
     setShelters,
     setFiltered,
@@ -70,23 +68,12 @@ function MapContainer() {
     markerMap,
     infoMap,
     infoWindowRef,
-    handleMarkerClick: handleSearchClick, // ⭐️핵심! 마커 클릭도 같은 함수!
+    handleMarkerClick: handleSearchClick,
   });
 
-  // 검색, 필터
-  const handleSearchChange = (e) => {
-    const value = e.target.value;
-    setSearchText(value);
-    setShowSuggestions(true);
-    const suggestions = shelters.filter((shelter) =>
-      shelter.name.toLowerCase().includes(value.toLowerCase())
-    );
-    setFilteredSuggestions(suggestions.slice(0, 5));
-  };
-
-  const handleSearchIconClick = () => {
+  useEffect(() => {
     applyFilter(searchText, sortOption, regionOption);
-  };
+  }, [searchText, sortOption, regionOption, shelters]);
 
   const applyFilter = (text, sort, region) => {
     let data = [...shelters];
@@ -100,9 +87,23 @@ function MapContainer() {
     setCurrentPage(1);
   };
 
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchText(value);
+    setShowSuggestions(true);
+    const suggestions = shelters.filter((shelter) =>
+      shelter.name.toLowerCase().includes(value.toLowerCase())
+    );
+    setFilteredSuggestions(suggestions.slice(0, 5));
+  };
+
+  const handleSearchIconClick = () => {
+    // setSearchText(searchText); // 이미 반영됨
+  };
+
   return (
     <div style={{ display: "flex", height: "100vh", width: "100vw" }}>
-      <div className="sidebar">
+      <div className="sidebar" style={{ width: 370, background: "#f4f6fa", padding: 16 }}>
         <SearchFilter
           searchText={searchText}
           setSearchText={setSearchText}
@@ -115,7 +116,6 @@ function MapContainer() {
           mapRef={mapRef.current}
           userLocation={userLocation.current}
         />
-
         <SearchList
           filtered={filtered}
           currentPage={currentPage}

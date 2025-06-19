@@ -124,7 +124,7 @@ export function useShelterMap({
 
                                 setTimeout(() => {
                                     infoWindowRef.current?.close();
-                                }, 5000);
+                                }, 50000);
 
                                 if (shelter.name === closestName && userLocation.current) {
                                     const line = new window.kakao.maps.Polyline({
