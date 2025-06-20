@@ -1,6 +1,4 @@
-// 📁 src/components/SearchFilter.jsx
 import React from "react";
-
 
 function SearchFilter({
     searchText,
@@ -65,7 +63,13 @@ function SearchFilter({
                         if (e.key === "Enter") handleSearchIconClick();
                     }}
                     placeholder="데려가시개 입양케어센터 24"
-                    style={{ width: "100%", padding: "6px 0px 6px 10px", fontSize: "17px", border: "1px solid #ccc", borderRadius: "6px" }}
+                    style={{
+                        width: "100%",
+                        padding: "6px 0px 6px 10px",
+                        fontSize: "17px",
+                        border: "1px solid #ccc",
+                        borderRadius: "6px"
+                    }}
                 />
                 <span
                     onClick={handleSearchIconClick}
@@ -86,4 +90,3 @@ function SearchFilter({
 }
 
 export default SearchFilter;
-

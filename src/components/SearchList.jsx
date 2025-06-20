@@ -1,3 +1,5 @@
+// [src/components/SearchList.jsx]
+
 import React, { useRef, useEffect } from "react";
 
 function SearchList({
@@ -18,7 +20,7 @@ function SearchList({
         }
     }, [selectedShelter, currentPage]);
 
-    // 현재 페이지의 보호소 목록 슬라이스
+    // 현재 페이지의 보호소 목록
     const paginatedList = filtered.slice(
         (currentPage - 1) * itemsPerPage,
         currentPage * itemsPerPage
@@ -26,7 +28,7 @@ function SearchList({
 
     return (
         <>
-            {/* 리스트 출력 */}
+            {/* 보호소 리스트 */}
             <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
                 {paginatedList.map((shelter, index) => (
                     <li
@@ -78,14 +80,18 @@ function SearchList({
                             </div>
                             <div style={{ fontSize: "12px", color: "#777" }}>{shelter.tel}</div>
                             {shelter.distance !== undefined && (
-                                <div style={{ fontSize: "12px", color: "#e53935", fontWeight: "bold" }}>
+                                <div style={{
+                                    fontSize: "12px",
+                                    color: "#e53935",
+                                    fontWeight: "bold"
+                                }}>
                                     {shelter.distance.toFixed(1)} km
                                 </div>
                             )}
                         </div>
                     </li>
                 ))}
-                {/* 리스트가 비었을 때 안내 */}
+                {/* 리스트가 비었을 때 안내 메시지 */}
                 {paginatedList.length === 0 && (
                     <li style={{
                         textAlign: "center",
@@ -97,6 +103,7 @@ function SearchList({
                     </li>
                 )}
             </ul>
+
             {/* 페이지네이션 */}
             <div style={{
                 display: "flex", gap: 5, justifyContent: "center",

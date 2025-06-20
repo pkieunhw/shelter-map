@@ -1,12 +1,18 @@
-
-
 import React, { useState, useRef, useEffect } from "react";
 import SearchList from "./SearchList";
 import SearchFilter from "./SearchFilter";
 import { useShelterMap } from "../hooks/useShelterMap";
 
+// ⭐️ 지역 그룹 매핑 테이블
+const REGION_MAP = {
+  "전체": null,
+  "서울/인천": ["서울", "인천"],
+  "경기": ["경기"],
+  "충청/강원": ["충남", "충북", "강원", "대전"],
+  "부산/경남/전라": ["부산", "경남", "경북", "전남", "전북"],
+};
+
 function MapContainer() {
-  // ======== 레퍼런스(참조 객체)
   const mapRef = useRef(null);
   const markerMap = useRef(new Map());
   const infoMap = useRef(new Map());
@@ -14,7 +20,6 @@ function MapContainer() {
   const userLocation = useRef(null);
   const polylineRef = useRef(null);
 
-  // ======== 상태(state) 관리
   const [shelters, setShelters] = useState([]);
   const [filtered, setFiltered] = useState([]);
   const [closestName, setClosestName] = useState("");
@@ -30,7 +35,6 @@ function MapContainer() {
 
   const itemsPerPage = 7;
 
-  // ======== 마커/리스트 클릭 동기화
   const handleSearchClick = (shelter) => {
     if (!shelter) return;
     const idx = filtered.findIndex(item => item.id === shelter.id);
@@ -71,6 +75,7 @@ function MapContainer() {
     handleMarkerClick: handleSearchClick,
   });
 
+  // ⭐️ 필터/정렬 함수 (지역매핑 적용!)
   useEffect(() => {
     applyFilter(searchText, sortOption, regionOption);
   }, [searchText, sortOption, regionOption, shelters]);
@@ -78,7 +83,10 @@ function MapContainer() {
   const applyFilter = (text, sort, region) => {
     let data = [...shelters];
     if (text) data = data.filter((s) => s.name.includes(text));
-    if (region !== "전체") data = data.filter((s) => s.region === region);
+    // ⭐️ 지역 그룹에 따라 매핑 적용
+    if (region !== "전체" && REGION_MAP[region]) {
+      data = data.filter((s) => REGION_MAP[region].includes(s.region));
+    }
     if (sort === "거리순") data.sort((a, b) => a.distance - b.distance);
     if (sort === "이름순") data.sort((a, b) => a.name.localeCompare(b.name));
     if (sort === "등록순") data.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
@@ -87,6 +95,7 @@ function MapContainer() {
     setCurrentPage(1);
   };
 
+  // ======== 검색 자동완성/입력 로직
   const handleSearchChange = (e) => {
     const value = e.target.value;
     setSearchText(value);
@@ -97,8 +106,9 @@ function MapContainer() {
     setFilteredSuggestions(suggestions.slice(0, 5));
   };
 
+  // ✅ 엔터 및 검색 아이콘 클릭 시 강제로 필터 적용!
   const handleSearchIconClick = () => {
-    // setSearchText(searchText); // 이미 반영됨
+    applyFilter(searchText, sortOption, regionOption);
   };
 
   return (
